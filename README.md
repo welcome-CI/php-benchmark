@@ -2,7 +2,7 @@
 
 ![Showcase](https://user-images.githubusercontent.com/8056274/115028055-bc02a280-9ec4-11eb-991c-69cd2a45b69c.png)
 
-## Intro
+## Introduction
 
 **Koel** (also stylized as **koel**, with a lowercase k) is a simple web-based personal audio streaming service written
 in [Vue](http://vuejs.org/) on the client side and [Laravel](http://laravel.com/) on the server side. Targeting web
