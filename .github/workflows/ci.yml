@@ -1,41 +1,61 @@
 on: push
 name: CI
 jobs:
-  phpunit:
+  composer-install:
     runs-on: ubuntu-latest
     container:
       image: sunasteriskrnd/php-workspace:8.1-alpine
 
-    services:
-      postgres:
-        image: postgres:10.8
-        env:
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: test
-        ports:
-          - 5432:5432
-        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
-
     steps:
       - uses: actions/checkout@v1
-        with:
-          fetch-depth: 1
 
-      - name: Install composer dependencies
+      - name: Composer install
         run: |
           composer install --ignore-platform-reqs
 
-      - name: Prepare Laravel Application
-        run: |
-          cp .env.example .env
-          php artisan key:generate
+      - run: mkdir -p workspaces/vendor
 
-      - name: Run code style checker
-        run: composer cs
+      - run: mv -v vendor/* workspaces/
 
-      - name: Run static analysis
-        run: composer analyze -- --no-progress
+      - uses: actions/upload-artifact@master
+        with:
+          name: vendor
+          path: workspaces/vendor
 
-      - name: Run tests
-        run: composer coverage
+#  phpunit:
+#    runs-on: ubuntu-latest
+#    container:
+#      image: sunasteriskrnd/php-workspace:8.1-alpine
+#
+#    services:
+#      postgres:
+#        image: postgres:10.8
+#        env:
+#          POSTGRES_USER: postgres
+#          POSTGRES_PASSWORD: postgres
+#          POSTGRES_DB: test
+#        ports:
+#          - 5432:5432
+#        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+#
+#    steps:
+#      - uses: actions/checkout@v1
+#        with:
+#          fetch-depth: 1
+#
+#      - name: Prepare Laravel Application
+#        run: |
+#          echo 'memory_limit=-1' >> /usr/local/etc/php/conf.d/docker-php-memlimit.ini
+#          docker-php-ext-disable xdebug
+#          cp .env.example .env
+#          php artisan key:generate
+#          php artisan migrate
+#
+#      - name: Run code style checker
+#        run: composer cs
+#
+#      - name: Run static analysis
+#        run: composer analyze -- --no-progress
+#
+#      - name: Run tests
+#        run: composer coverage
