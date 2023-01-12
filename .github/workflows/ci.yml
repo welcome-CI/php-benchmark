@@ -24,7 +24,7 @@ jobs:
 
       - name: Install composer dependencies
         run: |
-          composer install
+          composer install --ignore-platform-reqs
 
       - name: Prepare Laravel Application
         run: |
