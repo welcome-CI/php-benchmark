@@ -25,6 +25,7 @@ jobs:
           path: workspaces/vendor
 
   phpcs:
+    needs: composer-install
     runs-on: ubuntu-latest
     container:
       image: sunasteriskrnd/php-workspace:8.1-alpine
