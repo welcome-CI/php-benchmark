@@ -20,14 +20,12 @@ jobs:
         uses: actions/cache/restore@v3
         with:
           path: node_modules
-          key: ${{ runner.os }}-node-${{ hashFiles('**/yarn.lock') }}
+          key: ${{ runner.os }}-node-${{ hashFiles('yarn.lock') }}
           restore-keys: |
             ${{ runner.os }}-node-
 
       - name: Yarn install
-        run: |
-          yarn install
-          ls -la
+        run: yarn install
 
       - name: Add build dependencies to container
         run: |
@@ -35,11 +33,11 @@ jobs:
           tar
 
       - name: Yarn caching
-        uses: actions/cache@v3
+        uses: actions/cache/save@v3
         id: node-cache
         with:
           path: node_modules
-          key: ${{ runner.os }}-node-${{ hashFiles('**/yarn.lock') }}
+          key: ${{ runner.os }}-node-${{ hashFiles('yarn.lock') }}
 
       - name: Yarn lint
         run: yarn lint
