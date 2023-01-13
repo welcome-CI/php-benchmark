@@ -1,5 +1,9 @@
 on: push
 name: CI
+
+env:
+  LARAVEL_BYPASS_ENV_CHECK: 1
+
 jobs:
   backend:
     runs-on: ubuntu-latest
@@ -100,11 +104,7 @@ jobs:
         run: yarn lint
 
       - name: Run unit tests
-        env:
-          APP_ENV: testing
-        run: |
-          cp .env.example .env.testing
-          yarn test:unit
+        run: yarn test:unit
 
       - name: Collect coverage
         uses: codecov/codecov-action@v1
