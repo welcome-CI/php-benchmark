@@ -55,6 +55,7 @@ jobs:
           php artisan key:generate --quiet
           php artisan migrate
           composer coverage
+          ls -la
 
       - name: 'Upload coverage artifact'
         uses: actions/upload-artifact@v3
