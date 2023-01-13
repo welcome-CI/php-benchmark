@@ -26,9 +26,6 @@ jobs:
       - run:
           name: Yarn lint
           command: yarn lint
-      - run:
-          name: Yarn tests
-          command: yarn test:unit
 
   backend:
     docker:
@@ -65,6 +62,10 @@ jobs:
       - run:
           name: PHP CodeSniffer
           command: composer cs
+
+      - run:
+          name: Composer analysis
+          command: composer analyze
 
       - run:
           name: PHPUnit

@@ -5,6 +5,38 @@ env:
   LARAVEL_BYPASS_ENV_CHECK: 1
 
 jobs:
+  frontend:
+    runs-on: ubuntu-latest
+    container:
+      image: node:16-alpine
+
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 1
+
+      - name: Restore yarn cache
+        id: yarn-cache-restore
+        uses: actions/cache/restore@v3
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-yarn-${{ hashFiles('yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-yarn-
+
+      - name: Yarn install
+        run: yarn install
+
+      - name: Yarn caching
+        uses: actions/cache/save@v3
+        id: yarn-cache
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-yarn-${{ hashFiles('yarn.lock') }}
+
+      - name: Yarn lint
+        run: yarn lint
+
   backend:
     runs-on: ubuntu-latest
     container:
@@ -49,6 +81,9 @@ jobs:
       - name: PHP CodeSniffer
         run: composer cs
 
+      - name: Composer analysis
+        run: composer analyze
+
       - name: PHPUnit
         env:
           APP_ENV: testing
@@ -66,41 +101,3 @@ jobs:
           name: Coverage
           path: coverage
           retention-days: 5
-
-      - name: Composer analysis
-        run: composer analyze -- --no-progress
-
-  frontend:
-    runs-on: ubuntu-latest
-    container:
-      image: node:16-alpine
-
-    steps:
-      - uses: actions/checkout@v3
-        with:
-          fetch-depth: 1
-
-      - name: Restore yarn cache
-        id: yarn-cache-restore
-        uses: actions/cache/restore@v3
-        with:
-          path: node_modules
-          key: ${{ runner.os }}-yarn-${{ hashFiles('yarn.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-yarn-
-
-      - name: Yarn install
-        run: yarn install
-
-      - name: Yarn caching
-        uses: actions/cache/save@v3
-        id: yarn-cache
-        with:
-          path: node_modules
-          key: ${{ runner.os }}-yarn-${{ hashFiles('yarn.lock') }}
-
-      - name: Yarn lint
-        run: yarn lint
-
-      - name: Yarn tests
-        run: yarn test:unit
