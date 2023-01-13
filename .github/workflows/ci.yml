@@ -1,17 +1,28 @@
 on: push
 name: CI
 jobs:
-  composer-install:
+  backend:
     runs-on: ubuntu-latest
     container:
       image: sunasteriskrnd/php-workspace:8.1-alpine
+
+    services:
+      postgres:
+        image: postgres:10.8
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: test
+        ports:
+          - 5432:5432
+        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
 
     steps:
       - uses: actions/checkout@v3
         with:
           fetch-depth: 1
 
-      - name: Restore cached vendor
+      - name: Restore composer cache
         id: composer-cache-restore
         uses: actions/cache/restore@v3
         with:
@@ -24,57 +35,31 @@ jobs:
         run: |
           composer install --ignore-platform-reqs
 
-      - name: Caching vendor
+      - name: Composer caching
         uses: actions/cache/save@v3
         id: composer-cache
         with:
           path: vendor
           key: ${{ runner.os }}-composer-${{ hashFiles('composer.lock') }}
 
-#  phpcs:
-#    needs: composer-install
-#    runs-on: ubuntu-latest
-#    container:
-#      image: sunasteriskrnd/php-workspace:8.1-alpine
-#    steps:
-#      - uses: actions/checkout@v3
-#        with:
-#          fetch-depth: 1
-#
-#      - name: PHP CodeSniffer
-#        run: composer cs
+      - name: PHP CodeSniffer
+        run: composer cs
 
-#  phpunit:
-#    runs-on: ubuntu-latest
-#    container:
-#      image: sunasteriskrnd/php-workspace:8.1-alpine
-#
-#    services:
-#      postgres:
-#        image: postgres:10.8
-#        env:
-#          POSTGRES_USER: postgres
-#          POSTGRES_PASSWORD: postgres
-#          POSTGRES_DB: test
-#        ports:
-#          - 5432:5432
-#        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
-#
-#    steps:
-#      - uses: actions/checkout@v1
-#        with:
-#          fetch-depth: 1
-#
-#      - name: Prepare Laravel Application
-#        run: |
-#          echo 'memory_limit=-1' >> /usr/local/etc/php/conf.d/docker-php-memlimit.ini
-#          docker-php-ext-disable xdebug
-#          cp .env.example .env
-#          php artisan key:generate
-#          php artisan migrate
-#
-#      - name: Run static analysis
-#        run: composer analyze -- --no-progress
-#
-#      - name: Run tests
-#        run: composer coverage
+      - name: PHPUnit
+        run: |
+          echo 'memory_limit=-1' >> /usr/local/etc/php/conf.d/docker-php-memlimit.ini
+          docker-php-ext-disable xdebug
+          cp .env.example .env
+          php artisan key:generate
+          php artisan migrate
+          composer coverage
+
+      - name: 'Upload coverage artifact'
+        uses: actions/upload-artifact@v3
+        with:
+          name: Coverage
+          path: coverage
+          retention-days: 5
+
+      - name: Run static analysis
+        run: composer analyze -- --no-progress
