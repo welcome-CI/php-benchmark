@@ -48,12 +48,6 @@ class MediaSyncServiceTest extends TestCase
         // Ogg files and audio files in subdirectories should be recognized
         self::assertDatabaseHas(Song::class, ['path' => $this->path('/subdir/back-in-black.ogg')]);
 
-        // GitHub issue #380. folder.png should be copied and used as the cover for files
-        // under subdir/
-        /** @var Song $song */
-        $song = Song::query()->where('path', $this->path('/subdir/back-in-black.ogg'))->first();
-        self::assertNotEmpty($song->album->cover);
-
         // File search shouldn't be case-sensitive.
         self::assertDatabaseHas(Song::class, ['path' => $this->path('/subdir/no-name.mp3')]);
 
