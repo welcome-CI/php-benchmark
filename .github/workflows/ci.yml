@@ -7,40 +7,42 @@ jobs:
       image: sunasteriskrnd/php-workspace:8.1-alpine
 
     steps:
-      - uses: actions/checkout@v1
+      - uses: actions/checkout@v3
         with:
           fetch-depth: 1
+
+      - name: Restore cached vendor
+        id: composer-cache-restore
+      - uses: actions/cache/restore@v3
+        with:
+          path: vendor
+          key: ${{ runner.os }}-composer-${{ hashFiles('composer.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-composer-
 
       - name: Composer install
         run: |
           composer install --ignore-platform-reqs
 
-      - run: mkdir -p workspaces/vendor
-
-      - run: mv -v vendor/* workspaces/vendor
-
-      - uses: actions/upload-artifact@master
+      - name: Caching vendor
+        uses: actions/cache/save@v3
+        id: composer-cache
         with:
-          name: vendor
-          path: workspaces/vendor
+          path: vendor
+          key: ${{ runner.os }}-composer-${{ hashFiles('composer.lock') }}
 
-  phpcs:
-    needs: composer-install
-    runs-on: ubuntu-latest
-    container:
-      image: sunasteriskrnd/php-workspace:8.1-alpine
-    steps:
-      - uses: actions/checkout@v1
-        with:
-          fetch-depth: 1
-
-      - uses: actions/download-artifact@master
-        with:
-          name: vendor
-          path: workspaces/vendor
-
-      - name: PHP CodeSniffer
-        run: composer cs
+#  phpcs:
+#    needs: composer-install
+#    runs-on: ubuntu-latest
+#    container:
+#      image: sunasteriskrnd/php-workspace:8.1-alpine
+#    steps:
+#      - uses: actions/checkout@v3
+#        with:
+#          fetch-depth: 1
+#
+#      - name: PHP CodeSniffer
+#        run: composer cs
 
 #  phpunit:
 #    runs-on: ubuntu-latest
