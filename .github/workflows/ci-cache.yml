@@ -25,7 +25,9 @@ jobs:
             ${{ runner.os }}-node-
 
       - name: Yarn install
-        run: yarn install
+        run: |
+          yarn install
+          ls -la
 
       - name: Yarn caching
         uses: actions/cache/save@v3
