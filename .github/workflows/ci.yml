@@ -13,7 +13,7 @@ jobs:
 
       - name: Restore cached vendor
         id: composer-cache-restore
-      - uses: actions/cache/restore@v3
+        uses: actions/cache/restore@v3
         with:
           path: vendor
           key: ${{ runner.os }}-composer-${{ hashFiles('composer.lock') }}
