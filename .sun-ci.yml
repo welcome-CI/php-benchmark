@@ -7,7 +7,6 @@ checkout:
 stages:
   - Install
   - Test
-  - Build
 
 jobs:
   - name: Yarn install
@@ -45,8 +44,10 @@ jobs:
     image: node:16-alpine
     environment:
       - LARAVEL_BYPASS_ENV_CHECK=1
-    script:
+    before_script:
       - echo fs.inotify.max_user_watches=524288 | tee -a /etc/sysctl.conf
+    script:
+      - sysctl -p
       - yarn test:unit
 
   - name: PHP CodeSniffer
@@ -54,6 +55,12 @@ jobs:
     image: sunasteriskrnd/php-workspace:8.1-alpine
     script:
       - composer cs
+
+  - name: Composer analysis
+    stage: Test
+    image: sunasteriskrnd/php-workspace:8.1-alpine
+    script:
+      - composer analyze -- --no-progress
 
   - name: PHPUnit
     stage: Test
