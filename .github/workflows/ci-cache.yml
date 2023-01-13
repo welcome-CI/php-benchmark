@@ -29,6 +29,11 @@ jobs:
           yarn install
           ls -la
 
+      - name: Add build dependencies to container
+        run: |
+          apk add --update --no-progress \
+          tar
+
       - name: Yarn caching
         uses: actions/cache@v3
         id: node-cache
