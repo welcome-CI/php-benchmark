@@ -16,23 +16,23 @@ jobs:
           fetch-depth: 1
 
       - name: Restore yarn cache
-        id: yarn-cache-restore
+        id: node-cache-restore
         uses: actions/cache/restore@v3
         with:
           path: node_modules
-          key: ${{ runner.os }}-yarn-${{ hashFiles('yarn.lock') }}
+          key: ${{ runner.os }}-node-${{ hashFiles('yarn.lock') }}
           restore-keys: |
-            ${{ runner.os }}-yarn-
+            ${{ runner.os }}-node-
 
       - name: Yarn install
         run: yarn install
 
       - name: Yarn caching
         uses: actions/cache/save@v3
-        id: yarn-cache
+        id: node-cache
         with:
           path: node_modules
-          key: ${{ runner.os }}-yarn-${{ hashFiles('yarn.lock') }}
+          key: ${{ runner.os }}-node-${{ hashFiles('yarn.lock') }}
 
       - name: Yarn lint
         run: yarn lint
