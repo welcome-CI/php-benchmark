@@ -1,5 +1,5 @@
 on: push
-name: CI
+name: CI-with-cache
 
 env:
   LARAVEL_BYPASS_ENV_CHECK: 1
