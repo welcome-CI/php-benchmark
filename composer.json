@@ -93,7 +93,7 @@
       "@php artisan key:generate"
     ],
     "test": "@php artisan test",
-    "coverage": "@php artisan test --coverage-clover=coverage.xml",
+    "coverage": "@php artisan test --coverage-clover ./coverage.xml --log-junit coverage/junit.xml",
     "cs": "phpcs --standard=ruleset.xml",
     "cs:fix": "phpcbf --standard=ruleset.xml",
     "analyze": "phpstan analyse --memory-limit 1G --configuration phpstan.neon.dist --ansi"
