@@ -4,6 +4,8 @@ jobs:
   frontend:
     docker:
       - image: node:16-alpine
+        environment:
+          LARAVEL_BYPASS_ENV_CHECK: 1
     steps:
       - checkout
 
