@@ -66,3 +66,43 @@ jobs:
 
       - name: Run static analysis
         run: composer analyze -- --no-progress
+
+  frontend:
+    runs-on: ubuntu-latest
+    container:
+      image: node:16-alpine
+
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 1
+
+      - name: Restore yarn cache
+        id: yarn-cache-restore
+        uses: actions/cache/restore@v3
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-yarn-${{ hashFiles('yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-yarn-
+
+      - name: Yarn install
+        run: yarn install
+
+      - name: Yarn caching
+        uses: actions/cache/save@v3
+        id: yarn-cache
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-yarn-${{ hashFiles('yarn.lock')
+
+      - name: Lint
+        run: yarn lint
+
+      - name: Run unit tests
+        run: yarn test:unit
+
+      - name: Collect coverage
+        uses: codecov/codecov-action@v1
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
