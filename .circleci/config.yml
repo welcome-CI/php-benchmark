@@ -5,9 +5,7 @@ jobs:
     docker:
       - image: node:16-alpine
     steps:
-      - run:
-          name: checkout
-          command: git clone --depth 1 "$CIRCLE_REPOSITORY_URL" --branch "$CIRCLE_BRANCH"
+      - checkout
 
       - restore_cache:
           keys:
@@ -44,9 +42,7 @@ jobs:
           POSTGRES_PASSWORD: postgres
 
     steps:
-      - run:
-          name: checkout
-          command: git clone --depth 1 "$CIRCLE_REPOSITORY_URL" --branch "$CIRCLE_BRANCH"
+      - checkout
 
       - restore_cache:
           keys:
