@@ -49,8 +49,7 @@ jobs:
         run: |
           echo 'memory_limit=-1' >> /usr/local/etc/php/conf.d/docker-php-memlimit.ini
           docker-php-ext-disable xdebug
-          cp .env.example .env
-          php artisan key:generate
+          php artisan key:generate --quiet
           php artisan migrate
           composer coverage
 
