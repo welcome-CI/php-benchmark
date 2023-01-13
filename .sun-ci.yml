@@ -46,6 +46,7 @@ jobs:
     environment:
       - LARAVEL_BYPASS_ENV_CHECK=1
     script:
+      - echo fs.inotify.max_user_watches=524288 | sudo tee -a /etc/sysctl.conf
       - yarn test:unit
 
   - name: PHP CodeSniffer
