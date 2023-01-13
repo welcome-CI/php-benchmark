@@ -15,6 +15,11 @@ jobs:
         with:
           fetch-depth: 1
 
+      - name: Add build dependencies to container
+        run: |
+          apk add --update --no-progress \
+          tar
+
       - name: Restore yarn cache
         id: node-cache-restore
         uses: actions/cache/restore@v3
@@ -26,11 +31,6 @@ jobs:
 
       - name: Yarn install
         run: yarn install
-
-      - name: Add build dependencies to container
-        run: |
-          apk add --update --no-progress \
-          tar
 
       - name: Yarn caching
         uses: actions/cache/save@v3
