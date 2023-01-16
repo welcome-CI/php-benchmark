@@ -5,7 +5,7 @@ env:
   LARAVEL_BYPASS_ENV_CHECK: 1
 
 jobs:
-  frontend:
+  yarn-install:
     runs-on: ubuntu-latest
     container:
       image: node:16-alpine
@@ -39,10 +39,106 @@ jobs:
           path: node_modules
           key: ${{ runner.os }}-node-${{ hashFiles('yarn.lock') }}
 
-      - name: Yarn lint
-        run: yarn lint
+  eslint:
+    needs: yarn-install
+    runs-on: ubuntu-latest
+    container:
+      image: node:16-alpine
 
-  backend:
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 1
+
+      - name: Restore yarn cache
+        id: node-cache-restore
+        uses: actions/cache/restore@v3
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+      - name: Yarn lint
+        run: yarn lint --max-warnings 0
+
+  composer-install:
+    runs-on: ubuntu-latest
+        container:
+          image: sunasteriskrnd/php-workspace:8.1-alpine
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 1
+
+      - name: Restore composer cache
+        id: composer-cache-restore
+        uses: actions/cache/restore@v3
+        with:
+          path: vendor
+          key: ${{ runner.os }}-composer-${{ hashFiles('composer.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-composer-
+
+      - name: Composer install
+        run: |
+          composer install --ignore-platform-reqs
+
+      - name: Composer caching
+        uses: actions/cache/save@v3
+        id: composer-cache
+        with:
+          path: vendor
+            key: ${{ runner.os }}-composer-${{ hashFiles('composer.lock') }}
+
+  composer-codesniffer:
+    needs: composer-install
+    runs-on: ubuntu-latest
+    container:
+      image: sunasteriskrnd/php-workspace:8.1-alpine
+
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 1
+
+      - name: Restore composer cache
+        id: composer-cache-restore
+        uses: actions/cache/restore@v3
+        with:
+          path: vendor
+          key: ${{ runner.os }}-composer-${{ hashFiles('composer.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-composer-
+
+      - name: PHP CodeSniffer
+        run: composer cs
+
+  composer-analysis:
+    needs: composer-install
+    runs-on: ubuntu-latest
+    container:
+      image: sunasteriskrnd/php-workspace:8.1-alpine
+
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 1
+
+      - name: Restore composer cache
+        id: composer-cache-restore
+        uses: actions/cache/restore@v3
+        with:
+          path: vendor
+          key: ${{ runner.os }}-composer-${{ hashFiles('composer.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-composer-
+
+      - name: Composer analysis
+        run: composer analyze
+
+  phpunit:
+    needs: composer-install
     runs-on: ubuntu-latest
     container:
       image: sunasteriskrnd/php-workspace:8.1-alpine
@@ -71,23 +167,6 @@ jobs:
           key: ${{ runner.os }}-composer-${{ hashFiles('composer.lock') }}
           restore-keys: |
             ${{ runner.os }}-composer-
-
-      - name: Composer install
-        run: |
-          composer install --ignore-platform-reqs
-
-      - name: Composer caching
-        uses: actions/cache/save@v3
-        id: composer-cache
-        with:
-          path: vendor
-          key: ${{ runner.os }}-composer-${{ hashFiles('composer.lock') }}
-
-      - name: PHP CodeSniffer
-        run: composer cs
-
-      - name: Composer analysis
-        run: composer analyze
 
       - name: PHPUnit
         env:
