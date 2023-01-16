@@ -89,7 +89,7 @@ jobs:
         id: composer-cache
         with:
           path: vendor
-            key: ${{ runner.os }}-composer-${{ hashFiles('composer.lock') }}
+          key: ${{ runner.os }}-composer-${{ hashFiles('composer.lock') }}
 
   composer-codesniffer:
     needs: composer-install
