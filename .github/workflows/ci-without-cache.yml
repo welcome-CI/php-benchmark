@@ -1,72 +1,72 @@
-on: push
-name: CI-without-cache
-
-env:
-  LARAVEL_BYPASS_ENV_CHECK: 1
-
-jobs:
-  frontend:
-    runs-on: ubuntu-latest
-    container:
-      image: node:16-alpine
-
-    steps:
-      - uses: actions/checkout@v3
-        with:
-          fetch-depth: 1
-
-      - name: Yarn install
-        run: yarn install
-
-      - name: Yarn lint
-        run: yarn lint
-
-  backend:
-    runs-on: ubuntu-latest
-    container:
-      image: sunasteriskrnd/php-workspace:8.1-alpine
-
-    services:
-      postgres:
-        image: postgres:10.8
-        env:
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: test
-        ports:
-          - 5432:5432
-        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
-
-    steps:
-      - uses: actions/checkout@v3
-        with:
-          fetch-depth: 1
-
-      - name: Composer install
-        run: |
-          composer install --ignore-platform-reqs
-
-      - name: PHP CodeSniffer
-        run: composer cs
-
-      - name: Composer analysis
-        run: composer analyze
-
-      - name: PHPUnit
-        env:
-          APP_ENV: testing
-        run: |
-          echo 'memory_limit=-1' >> /usr/local/etc/php/conf.d/docker-php-memlimit.ini
-          docker-php-ext-disable xdebug
-          cp .env.example .env.testing
-          php artisan key:generate --quiet
-          php artisan migrate
-          composer coverage
-          ls -la
-
-      - name: 'Upload coverage artifact'
-        uses: actions/upload-artifact@v3
-        with:
-          name: Coverage
-          path: coverage
-          retention-days: 5
+#on: push
+#name: CI-without-cache
+#
+#env:
+#  LARAVEL_BYPASS_ENV_CHECK: 1
+#
+#jobs:
+#  frontend:
+#    runs-on: ubuntu-latest
+#    container:
+#      image: node:16-alpine
+#
+#    steps:
+#      - uses: actions/checkout@v3
+#        with:
+#          fetch-depth: 1
+#
+#      - name: Yarn install
+#        run: yarn install
+#
+#      - name: Yarn lint
+#        run: yarn lint
+#
+#  backend:
+#    runs-on: ubuntu-latest
+#    container:
+#      image: sunasteriskrnd/php-workspace:8.1-alpine
+#
+#    services:
+#      postgres:
+#        image: postgres:10.8
+#        env:
+#          POSTGRES_USER: postgres
+#          POSTGRES_PASSWORD: postgres
+#          POSTGRES_DB: test
+#        ports:
+#          - 5432:5432
+#        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+#
+#    steps:
+#      - uses: actions/checkout@v3
+#        with:
+#          fetch-depth: 1
+#
+#      - name: Composer install
+#        run: |
+#          composer install --ignore-platform-reqs
+#
+#      - name: PHP CodeSniffer
+#        run: composer cs
+#
+#      - name: Composer analysis
+#        run: composer analyze
+#
+#      - name: PHPUnit
+#        env:
+#          APP_ENV: testing
+#        run: |
+#          echo 'memory_limit=-1' >> /usr/local/etc/php/conf.d/docker-php-memlimit.ini
+#          docker-php-ext-disable xdebug
+#          cp .env.example .env.testing
+#          php artisan key:generate --quiet
+#          php artisan migrate
+#          composer coverage
+#          ls -la
+#
+#      - name: 'Upload coverage artifact'
+#        uses: actions/upload-artifact@v3
+#        with:
+#          name: Coverage
+#          path: coverage
+#          retention-days: 5
