@@ -1,13 +1,27 @@
 version: 2.1
 
 jobs:
-  frontend:
+  checkout: 
+    machine:
+      image: ubuntu-2004:current
+      docker_layer_caching: true      
+    steps:
+      - checkout 
+
+      - persist_to_workspace:
+            root: .
+            paths:
+                - .
+  yarn-install:
     docker:
       - image: node:16-alpine
         environment:
           LARAVEL_BYPASS_ENV_CHECK: 1
     steps:
-      - checkout
+      - attach_workspace:
+          at: .
+      - setup_remote_docker:
+          docker_layer_caching: true
 
       - restore_cache:
           keys:
@@ -19,29 +33,36 @@ jobs:
       - run:
           name: Yarn install
           command: yarn install
+
       - save_cache:
           key: cache-{{ checksum "yarn.lock" }}
           paths:
             - node_modules
-      - run:
-          name: Yarn lint
-          command: yarn lint
 
-  backend:
-    docker:
-      - image: sunasteriskrnd/php-workspace:8.1-alpine
-        environment:
-          APP_ENV: testing
-          DB_HOST: localhost
-          REDIS_HOST: localhost
-      - image: postgres:10.8
-        environment:
-          POSTGRES_DB: test
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
+      - persist_to_workspace:
+          root: .
+          paths:
+              - .
 
+  eslint: 
+    docker: 
+      - image: node:14-alpine
     steps:
-      - checkout
+      - attach_workspace:
+          at: .
+      - setup_remote_docker:
+          docker_layer_caching: true
+
+      - run: yarn lint --max-warnings 0
+
+  composer-install: 
+    docker: 
+      - image: sunasteriskrnd/php-workspace:8.1-alpine
+    steps:
+      - attach_workspace:
+          at: .
+      - setup_remote_docker:
+          docker_layer_caching: true
 
       - restore_cache:
           keys:
@@ -50,54 +71,40 @@ jobs:
             # fallback to using the latest cache if no exact match is found
             - cache-
 
-      - run:
-          name: Composer install
-          command: composer install --ignore-platform-reqs
-
+      - run: composer install --ignore-platform-reqs
+      
       - save_cache:
           key: cache-{{ checksum "composer.lock" }}
           paths:
             - vendor
+      - persist_to_workspace:
+          root: .
+          paths:
+              - .
 
-      - run:
-          name: PHP CodeSniffer
-          command: composer cs
+  php-code_sniffer: 
+    docker: 
+      - image: sunasteriskrnd/php-workspace:8.1-alpine
+    steps: 
+      - attach_workspace:
+          at: .
+      - setup_remote_docker:
+          docker_layer_caching: true
 
-      - run:
-          name: Composer analysis
-          command: composer analyze
+      - run: composer cs
+    
+  composer-analysis: 
+    docker: 
+      - image: sunasteriskrnd/php-workspace:8.1-alpine
+    steps: 
+      - attach_workspace:
+          at: .
+      - setup_remote_docker:
+          docker_layer_caching: true
 
-      - run:
-          name: PHPUnit
-          command: |
-            echo 'memory_limit=-1' >> /usr/local/etc/php/conf.d/docker-php-memlimit.ini
-            docker-php-ext-disable xdebug
-            cp .env.example .env.testing
-            php artisan key:generate --quiet
-            php artisan migrate
-            composer coverage
+      - run: composer analyze
 
-      - store_artifacts:
-          path: coverage
-      - store_test_results:
-          path: coverage/junit.xml
-
-  frontend-without-cache:
-    docker:
-      - image: node:16-alpine
-        environment:
-          LARAVEL_BYPASS_ENV_CHECK: 1
-    steps:
-      - checkout
-
-      - run:
-          name: Yarn install
-          command: yarn install
-      - run:
-          name: Yarn lint
-          command: yarn lint
-
-  backend-without-cache:
+  phpunit:
     docker:
       - image: sunasteriskrnd/php-workspace:8.1-alpine
         environment:
@@ -111,19 +118,10 @@ jobs:
           POSTGRES_PASSWORD: postgres
 
     steps:
-      - checkout
-
-      - run:
-          name: Composer install
-          command: composer install --ignore-platform-reqs
-
-      - run:
-          name: PHP CodeSniffer
-          command: composer cs
-
-      - run:
-          name: Composer analysis
-          command: composer analyze
+      - attach_workspace:
+          at: .
+      - setup_remote_docker:
+          docker_layer_caching: true
 
       - run:
           name: PHPUnit
@@ -143,12 +141,25 @@ jobs:
 workflows:
   ci-with-cache:
     jobs:
-      - frontend
-      - backend
-#  ci-without-cache:
-#    jobs:
-#      - frontend-without-cache
-#      - backend-without-cache
+      - checkout
+      - yarn-install:
+          requires:
+            - checkout
+      - composer-install:
+          requires:
+            - checkout
+      - eslint:
+          requires:
+            - yarn-install
+      - php-code_sniffer:
+          requires:
+            - composer-install
+      - composer-analysis:
+          requires:
+            - composer-install
+      - phpunit:
+          requires:
+            - composer-install
 
 
 
